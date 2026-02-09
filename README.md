@@ -1,12 +1,13 @@
 # AutoPhalanx
 
-**AutoPhalanx** (v1.1.0) is a Windower 4 addon for Final Fantasy XI that automatically equips your Phalanx received-damage-reduction gear when a party member casts **Phalanx** (or **Accession + Phalanx**) on you.
+**AutoPhalanx** (v1.2.0) is a Windower 4 addon for Final Fantasy XI that automatically equips your Phalanx received-damage-reduction gear when a party member casts **Phalanx** (or **Accession + Phalanx**) on you.
 
 It intelligently calculates AoE range, supports custom spell IDs (like Phalanx II), and automatically resets your gear after the spell lands.
 
 ## Features
 * **Smart Detection:** Swaps gear when someone casts Phalanx directly on you.
 * **AoE Logic:** Detects **Accession + Phalanx**. It calculates if you are within range (10 yalms) of the spell's target before swapping, preventing unnecessary swaps.
+* **Party Requirement:** Logic runs **only** when you are in a party to save resources. If you are solo, the addon stays dormant.
 * **Auto-Reset:** Automatically sends a command to your GearSwap to reset your gear 4 seconds after the cast is detected.
 * **Self-Cast Safety:** Ignores your own casting to prevent conflicts with GearSwap's standard midcast logic.
 
@@ -58,11 +59,20 @@ Load the addon in-game:
 ```
 
 ### Testing
-1.  Have a party member cast **Phalanx** on you.
-2.  Your gear should swap to `sets.Phalanx`.
-3.  After 4 seconds, your gear should automatically swap back to your Idle/Engaged set.
+1.  Join a party (The addon will not trigger if you are Solo).
+2.  Have a party member cast **Phalanx** on you.
+3.  Your gear should swap to `sets.Phalanx`.
+4.  After 4 seconds, your gear should automatically swap back to your Idle/Engaged set.
 
 ## Requirements
 * Windower 4
 * `packets` library (Standard)
 * `resources` library (Standard)
+
+## Copyright
+**Copyright (c) 2025 Voliathon**
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.

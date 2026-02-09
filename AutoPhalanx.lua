@@ -1,6 +1,20 @@
+--[[
+    Copyright (c) 2025 Voliathon
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+]]
+
 _addon.name = 'AutoPhalanx'
 _addon.author = 'Voliathon'
-_addon.version = '1.1.0 Return'
+_addon.version = '1.2.0'
 _addon.commands = {'ap', 'autophalanx'}
 
 local packets = require('packets')
@@ -9,10 +23,14 @@ local res = require('resources')
 -- ============================================================================
 -- CONFIGURATION
 -- ============================================================================
+-- The command to execute when you are about to be hit by Phalanx.
+-- Ensure the capitalization matches your GearSwap file (e.g., sets.Phalanx)
 local phalanx_command = 'gs equip sets.Phalanx'
-local return_command  = 'gs c update' -- Standard command to refresh GS state
-local cast_delay      = 4             -- Seconds to wait before switching back
-local debug_mode      = true 
+
+-- Command to reset gear after the spell lands (Triggered via GS self_command)
+local return_command  = 'gs c update' 
+local cast_delay      = 4             -- Seconds to wait before resetting gear
+local debug_mode      = true          -- Set to false to disable chat logs
 
 -- ============================================================================
 -- VALID IDS
@@ -45,10 +63,6 @@ end
 local function reset_gear()
     log('Spell should have landed. Resetting gear...')
     windower.send_command(return_command)
-    
-    -- Verification (Optional):
-    -- We can't easily check "sets.phalanx" because we don't know what items are in it 
-    -- from this addon's perspective. But we can confirm the reset command was sent.
 end
 
 -- ============================================================================
@@ -56,6 +70,14 @@ end
 -- ============================================================================
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x28 then
+        
+        -- OPTIMIZATION: Party Check
+        -- If we are Solo (Count <= 1), do not run any logic.
+        local party = windower.ffxi.get_party()
+        if not party or party.party1_count <= 1 then
+            return
+        end
+
         local packet = packets.parse('incoming', data)
         local actor_id = packet['Actor']
         local category = packet['Category']
@@ -71,7 +93,7 @@ windower.register_event('incoming chunk', function(id, data)
         -- 2. DETECT PHALANX
         if category == 8 and (param == ids.PHALANX_1 or param == ids.PHALANX_2 or param == ids.PHALANX_X) then
             
-            -- Ignore self-cast
+            -- Ignore self-cast (GearSwap handles this)
             if actor_id == player.id then return end
 
             local target_id = packet['Target 1 ID']
@@ -99,8 +121,6 @@ windower.register_event('incoming chunk', function(id, data)
                 windower.send_command(phalanx_command)
                 
                 -- SCHEDULE THE RESET
-                -- We verify the swap implicitly by the fact we sent the command.
-                -- To verify the *gear* specifically would require hardcoding your specific Phalanx items into this Lua.
                 coroutine.schedule(reset_gear, cast_delay)
             end
         end
