@@ -22,10 +22,10 @@ local res = require('resources')
 -- ============================================================================
 -- CONFIGURATION
 -- ============================================================================
-local phalanx_cmd = 'gs equip sets.Phalanx'
+local phalanx_cmd = 'gs equip sets.PhalanxReceived'
 local cursna_cmd  = 'gs equip sets.CursnaReceived'
 local return_cmd  = 'gs c update' 
-local debug_mode  = true 
+local debug_mode  = false 
 
 -- ============================================================================
 -- STATE TRACKING
