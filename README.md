@@ -31,7 +31,7 @@
 Open `auto_defense.lua` in a text editor. Look for the configuration section at the top:
 
 ```lua
-local phalanx_cmd = 'gs equip sets.PhalanxRceived'
+local phalanx_cmd = 'gs equip sets.PhalanxReceived'
 local cursna_cmd  = 'gs equip sets.CursnaReceived'
 ```
 
@@ -104,4 +104,5 @@ Redistribution and use in source and binary forms, with or without modification,
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
 
