@@ -14,7 +14,7 @@
 
 _addon.name = 'AutoDefense'
 _addon.author = 'Voliathon'
-_addon.version = '1.0.0'
+_addon.version = '1.1.0'
 _addon.commands = {'ad', 'autodefense'}
 
 local res = require('resources')
@@ -24,6 +24,7 @@ local res = require('resources')
 -- ============================================================================
 local phalanx_cmd = 'gs equip sets.PhalanxReceived'
 local cursna_cmd  = 'gs equip sets.CursnaReceived'
+local regen_cmd   = 'gs equip sets.RegenReceived' -- New command for Regen
 local return_cmd  = 'gs c update' 
 local debug_mode  = false 
 
@@ -34,7 +35,12 @@ local ids = {
     ACCESSIO  = 218,
     PHALANX_1 = 106,
     PHALANX_2 = 107,
-    CURSNA    = 20, -- The "Mystery ID" discovered via packet analysis
+    REGEN_1   = 108,
+    REGEN_2   = 110,
+    REGEN_3   = 111,
+    REGEN_4   = 477,
+    REGEN_5   = 504,
+    CURSNA    = 20, 
     DOOM      = 15
 }
 
@@ -88,7 +94,7 @@ end
 windower.register_event('action', function(act)
     
     -- Category 6 = Job Ability (Accession)
-    -- Category 8 = Spell Casting (Phalanx/Cursna)
+    -- Category 8 = Spell Casting (Phalanx/Cursna/Regen)
     if act.category == 6 or act.category == 8 then
         
         -- Optimization: Party Check
@@ -112,6 +118,7 @@ windower.register_event('action', function(act)
 
             local should_swap_phalanx = false
             local should_swap_cursna = false
+            local should_swap_regen = false
             local is_accession = (accession_users[actor_id] and os.time() < accession_users[actor_id])
 
             -- Iterate through targets
@@ -119,8 +126,13 @@ windower.register_event('action', function(act)
                 local action = target.actions[1]
                 
                 if action then
-                    -- THE FIX: Look at the Sub-Param
                     local sub_param = action.param 
+
+					-- >>> ADD THIS DEBUG BLOCK <<<
+                    if debug_mode and target.id == player.id then
+                        windower.add_to_chat(207, '[AD-Debug] Spell Landed on YOU! Sub-Param ID is: ' .. tostring(sub_param))
+                    end
+                    -- >>> END DEBUG BLOCK <<<
 
                     -- LOGIC: PHALANX
                     if sub_param == ids.PHALANX_1 or sub_param == ids.PHALANX_2 then
@@ -129,6 +141,23 @@ windower.register_event('action', function(act)
                         elseif is_accession and get_distance(target.id) < 10 then
                             should_swap_phalanx = true
                             log('AoE Phalanx proximity detected.')
+                        end
+
+					-- LOGIC: REGEN (Tiers I through V)
+                    elseif sub_param == ids.REGEN_1 or sub_param == ids.REGEN_2 or sub_param == ids.REGEN_3 or sub_param == ids.REGEN_4 or sub_param == ids.REGEN_5 then
+                        
+                        -- NEW: Only trigger Regen swaps if the main job is Rune Fencer
+                        if player.main_job == 'RUN' then
+                            if target.id == player.id then
+                                should_swap_regen = true
+                            elseif is_accession and get_distance(target.id) < 10 then
+                                should_swap_regen = true
+                                log('AoE Regen proximity detected.')
+                            end
+                        else
+                            if debug_mode then
+                                log('Regen ignored: Main job is not RUN.')
+                            end
                         end
 
                     -- LOGIC: CURSNA
@@ -145,13 +174,14 @@ windower.register_event('action', function(act)
                 end
             end
 
-            -- EXECUTE SWAPS
-            if should_swap_phalanx then
-                equip_and_schedule(phalanx_cmd, "Phalanx")
-            elseif should_swap_cursna then
+            -- EXECUTE SWAPS (Priority: Survival > Mitigation > Recovery)
+            if should_swap_cursna then
                 equip_and_schedule(cursna_cmd, "Cursna")
+            elseif should_swap_phalanx then
+                equip_and_schedule(phalanx_cmd, "Phalanx")
+            elseif should_swap_regen then
+                equip_and_schedule(regen_cmd, "Regen")
             end
         end
     end
-
 end)
